@@ -1,14 +1,14 @@
 <template>
   <div class="write-letter">
     <h1>강원이에게 편지쓰기</h1>
-    <input v-model="newLetter.name" placeholder="강원이에게 보여질 이름을 써주세용" class="english-font" />
-    <textarea v-model="newLetter.content" placeholder="편지내용을 적어줘용" class="english-font"></textarea>
-    <button @click="showConfirmation">편지보내기</button>
+    <input v-model="newLetter.name" placeholder="강원이에게 보여질 이름을 써주세요" class="english-font" />
+    <textarea v-model="newLetter.content" placeholder="편지 내용을 적어주세요" class="english-font"></textarea>
+    <button @click="saveLetter">편지 보내기</button>
 
     <!-- 확인 팝업 -->
     <div class="confirmation-modal" v-if="confirmationVisible">
       <div class="modal-content">
-        <p>정상적으로 보냈어요.</p>
+        <p>정상적으로 보냈습니다.</p>
         <button @click="closeConfirmation">확인</button>
       </div>
     </div>
@@ -17,25 +17,33 @@
 
 <script>
 import { ref } from 'vue';
+import { db } from '@/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 export default {
   setup() {
     const newLetter = ref({ name: '', content: '' });
     const confirmationVisible = ref(false);
 
-    const showConfirmation = () => {
+    const saveLetter = async () => {
       if (newLetter.value.name.trim() && newLetter.value.content.trim()) {
+        await addDoc(collection(db, "letters"), {
+          name: newLetter.value.name,
+          content: newLetter.value.content,
+          createdAt: new Date()
+        });
         confirmationVisible.value = true;
       } else {
-        alert('편지를 입력하세요.'); // 입력하지 않았을 때 알림창 표시
+        alert('편지를 입력하세요.');
       }
     };
 
     const closeConfirmation = () => {
-      location.reload(); // 페이지 새로고침
+      confirmationVisible.value = false;
+      newLetter.value = { name: '', content: '' };
     };
 
-    return { newLetter, confirmationVisible, showConfirmation, closeConfirmation };
+    return { newLetter, confirmationVisible, saveLetter, closeConfirmation };
   }
 };
 </script>
@@ -61,7 +69,6 @@ export default {
   border: 1px solid #ccc;
   border-radius: 5px;
   font-family: 'Arial', sans-serif;
-  /* 영어 글꼴 설정 */
 }
 
 .write-letter button {
